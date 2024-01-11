@@ -1,0 +1,51 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+{% load static %}
+<h1>All Posts</h1>
+{% if user.is_authenticated %}
+<form method="post" action="{% url 'create_post' %}">
+  {% csrf_token %}
+  <textarea class="form-control" name="post_content" id="exampleFormControlTextarea1" rows="3" required></textarea>
+  <button type="submit" class="btn btn-primary">Post</button>
+</form>
+{% endif %}
+{% for post in allPosts  %}
+<div class="card" style="width: 40rem;">
+    <div class="card-body">
+        <h5 class="card-title">Creator: {{ post.creator }}</h5>
+        <div class="card">
+            <p id="post-content-{{ post.id }}" class="card-text">{{ post.post_content }}</p>
+            <div id="edit-container-{{ post.id }}" style="display: none;">
+                <textarea name="post_content" id="edit-textarea-{{ post.id }}" class="form-control"></textarea>
+                <button id="saveChangesButton-{{ post.id }}" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+        <p>{{ post.date }}, {{ post.time }}</p>
+        <button class="like" data-post-id="{{ post.id }}" data-liked="{{ post.liked }}">
+          {% if user.is_authenticated %}
+              {% if post.liked %}
+                  Unlike
+              {% else %}
+                  Like
+              {% endif %}
+          {% else %}
+              Likes
+          {% endif %}
+        </button>
+        <p id="like-count-{{ post.id }}">{{ post.likes_count }}</p>
+        {% if post.is_creator %}
+        
+        <button class="btn btn-primary edit" style="color: white;" data-post-id="{{ post.id }}" data-post-content="{{ post.post_content }}">Edit</button>
+
+        
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+
+
+
+<script src="{% static 'network/main.js' %}"></script>
+<script>const csrfToken = "{{ csrf_token }}";</script>
+{% endblock %}
