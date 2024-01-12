@@ -39,48 +39,33 @@ function updateLikeButton(postID, data) {
 document.querySelectorAll(".edit").forEach(function (editButton) {
   editButton.addEventListener("click", function (event) {
     const postID = event.target.dataset.postId;
-    const postContent = event.target.dataset.postContent;
 
-    updateEditButton(postID, postContent);
+    updateEditButton(postID);
   });
 });
 //here the right text area appears and you are able to make changes
-function updateEditButton(postID, postContent) {
+function updateEditButton(postID) {
   // declare right value to each variable
-  console.log("content:", postContent);
   const editContainer = document.getElementById(`edit-container-${postID}`);
   let textarea = document.getElementById(`edit-textarea-${postID}`);
   const saveChangesButton = document.getElementById(`saveChangesButton-${postID}`);
-
-  document.getElementById(`post-content-${postID}`).style.display = "none";//none
-
-  fetch(`/textarea/${postID}/`)
+  
+fetch(`/textarea/${postID}/`)
     .then(response => response.json())
     .then(content => {
-      document.getElementById(`edit-textarea-${postID}`).innerHTML = content.postContent;
-      editContainer.style.display = "block";
-    });
-   // so you can see the textarea
+            
+        document.getElementById(`post-content-${postID}`).style.display = "none";
+        editContainer.style.display = "block";
+        textarea.value = content.content;
 
-  // Store the original content
-  let originalContent = postContent; 
-  // Update the textarea value
-  textarea.value = originalContent;
-  //textarea.value = "";
-  // here we handle the changes
-  saveChangesButton.addEventListener("click", function () {
-    // Check if changes have been made
-    const updatedContent = textarea.value;
-    saveChanges(postID, updatedContent, editContainer);
-    
-});
+        saveChangesButton.addEventListener("click", function () {
+            const updatedContent = textarea.value;
+            saveChanges(postID, updatedContent, editContainer);
+        });
+    })
 }
 //here you save the changes to django
 function saveChanges(postID, updatedContent, editContainer) {
-
-  console.log('updatedContentBeChange:', updatedContent);
-  document.getElementById(`edit-textarea-${postID}`).innerHTML = updatedContent;
-  document.getElementById(`post-content-${postID}`).style.display = "block";
   const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
   
   // we send a request to our backend to update the content
@@ -96,9 +81,13 @@ function saveChanges(postID, updatedContent, editContainer) {
   })
     .then(response => response.json())
     .then(updatedPost => {
-      document.getElementById(`post-content-${postID}`).innerHTML = updatedPost.post_content;
       editContainer.style.display = "none";
-      console.log('updatedContentEnd:', updatedContent);
+
+      let postContent = document.getElementById(`post-content-${postID}`)
+      postContent.innerText = updatedPost.post_content;
+      
+      document.getElementById(`post-content-${postID}`).style.display = "block";
+     
       //might update the user interface to reflect the changes
     });
 }

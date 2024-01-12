@@ -9,6 +9,10 @@ urlpatterns = [
     path("logout", views.logout_view, name="logout"),
     path("register", views.register, name="register"),
     path("create_post/", views.create_post, name="create_post"),
+    path("get_user/<int:userID>/", views.get_user, name="get_user"),
+    path("follow", views.follow, name="follow"),
+    path("unfollow", views.unfollow, name="unfollow"),
+    path("following", views.following, name="following"),
 
     #API Routes
    path('likes/<int:postID>/', views.like_toggle, name='like_toggle'),

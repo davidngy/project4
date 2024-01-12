@@ -2,14 +2,7 @@
 
 {% block body %}
 {% load static %}
-<h1>All Posts</h1>
-{% if user.is_authenticated %}
-<form method="post" action="{% url 'create_post' %}">
-  {% csrf_token %}
-  <textarea class="form-control" name="post_content" id="exampleFormControlTextarea1" rows="3" required></textarea>
-  <button type="submit" class="btn btn-primary">Post</button>
-</form>
-{% endif %}
+<h1>Following</h1>
 
 {% for post in rightPage  %}
 <div class="card" style="width: 40rem;">
@@ -35,7 +28,7 @@
           {% endif %}
         </button>
         <p id="like-count-{{ post.id }}">{{ post.likes_count }}</p>
-        {% if post.is_creator %}
+        {% if request.user == post.creator %}
         <button class="btn btn-primary edit" style="color: white;" data-post-id="{{ post.id }}">Edit</button>
 
         {% endif %}

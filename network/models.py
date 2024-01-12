@@ -16,9 +16,9 @@ class Post(models.Model):
     def __str__(self):
         return f"{self.creator.username} - {self.date} {self.time}"
 
-class Like(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_like")
-    post = models.ForeignKey(User, on_delete=models.CASCADE, related_name="post_like")
+class Follow(models.Model):
+    user_following = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_following")
+    user_followed = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_followed")
 
     def __str__(self):
-        return f"{self.user} - {self.post}"
+        return f"{self.user_following} - {self.user_followed}"

@@ -2,15 +2,30 @@
 
 {% block body %}
 {% load static %}
-<h1>All Posts</h1>
-{% if user.is_authenticated %}
-<form method="post" action="{% url 'create_post' %}">
-  {% csrf_token %}
-  <textarea class="form-control" name="post_content" id="exampleFormControlTextarea1" rows="3" required></textarea>
-  <button type="submit" class="btn btn-primary">Post</button>
-</form>
-{% endif %}
+<h1>{{ username }}</h1>
 
+<div>
+    <h1>Follwers: {{ followers.count }}</h1>
+    <h1>Following: {{ following.count }}</h1>
+    {% if user.is_authenticated %}
+        {% if user != currentUser %}
+            {% if ifFollowed %}
+                <form action="{% url 'unfollow' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="userFollow" value="{{ currentUser }}">
+                    <input type="submit" value="Unfollow">
+                </form>
+            {% else %}
+            <form action="{% url 'follow' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="userFollow" value="{{ currentUser }}">
+                <input type="submit" value="Follow">
+            </form>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+</div>
+{% csrf_token %}
 {% for post in rightPage  %}
 <div class="card" style="width: 40rem;">
     <div class="card-body">
@@ -35,7 +50,7 @@
           {% endif %}
         </button>
         <p id="like-count-{{ post.id }}">{{ post.likes_count }}</p>
-        {% if post.is_creator %}
+        {% if request.user == post.creator %}
         <button class="btn btn-primary edit" style="color: white;" data-post-id="{{ post.id }}">Edit</button>
 
         {% endif %}

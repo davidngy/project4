@@ -7,22 +7,30 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required 
 from django.http import JsonResponse
 import json
+from django.core.paginator import Paginator
 
-from .models import User, Post, Like
+from .models import User, Post, Follow
 
 
 def index(request):
     all_posts = Post.objects.all().order_by('-date', '-time')
     user = request.user
 
-    for post in all_posts:
+    paginator = Paginator(all_posts, 10)
+    pageNumber = request.GET.get("page")
+    rightPage = paginator.get_page(pageNumber)
+
+    for post in rightPage:
         # Check if the current user has liked this post
         post.liked = post.likes.filter(pk=user.pk).exists()
         # Check if the current user is the creator of this post
         post.is_creator = (user == post.creator)
 
+    
+
     return render(request, "network/index.html", {
-        "allPosts": all_posts
+        "allPosts": all_posts,
+        "rightPage": rightPage
     })
 
 
@@ -169,3 +177,90 @@ def refresh_textarea(request, postID):
         'content': post.post_content,
         }
     return JsonResponse(data)
+
+
+    
+def follow(request):
+    userFollow = request.POST.get("userFollow")
+    currentUser = User.objects.get(pk=request.user.id)
+    userFollowData = User.objects.get(username=userFollow)
+    f = Follow(user_following=currentUser, user_followed=userFollowData)
+    f.save()
+    userID = userFollowData.id
+    return HttpResponseRedirect(reverse(get_user, kwargs={'userID': userID}))
+    
+
+def unfollow(request):
+    userFollow = request.POST.get("userFollow")
+    currentUser = User.objects.get(pk=request.user.id)
+    userFollowData = User.objects.get(username=userFollow)
+    f = Follow.objects.get(user_following=currentUser, user_followed=userFollowData)
+    f.delete()
+    userID = userFollowData.id
+    return HttpResponseRedirect(reverse(get_user, kwargs={'userID': userID}))
+
+def following(request):
+    user = request.user
+    currentUser = User.objects.get(pk= request.user.id)
+    followingPeople = Follow.objects.filter(user_following=currentUser)
+    all_posts = Post.objects.all().order_by('id').reverse()
+
+    followingPosts = []
+
+    for post in all_posts:
+        post.liked = post.likes.filter(pk=user.pk).exists()
+        # Check if the current user is the creator of this post
+        post.is_creator = (user == post.creator)
+        for person in followingPeople:
+            if person.user_followed == post.creator:
+                followingPosts.append(post)
+
+    paginator = Paginator(followingPosts, 10)
+    pageNumber = request.GET.get("page")
+    rightPage = paginator.get_page(pageNumber)
+
+    return render(request, "network/following.html", {
+        "rightPage": rightPage
+    })
+
+def get_user(request, userID):
+    user = User.objects.get(pk=userID)
+    all_posts = Post.objects.filter(creator=user).order_by('-date', '-time').reverse()
+
+    following = Follow.objects.filter(user_following=user)
+    followers = Follow.objects.filter(user_followed=user)
+
+    paginator = Paginator(all_posts, 10)
+    pageNumber = request.GET.get("page")
+    rightPage = paginator.get_page(pageNumber)
+
+    for post in rightPage:
+        # Check if the current user has liked this post
+        post.liked = post.likes.filter(pk=user.pk).exists()
+        # Check if the current user is the creator of this post
+        post.is_creator = (user == post.creator)
+
+
+    try:
+        ifFollowed = followers.filter(user_following=User.objects.get(pk=request.user.id))
+        if len(ifFollowed) != 0:
+            ifFollowed = True
+        else:
+            ifFollowed = False
+    except:
+        ifFollowed = False
+    
+    
+
+    
+
+    if request.method == "GET":
+        return render(request, "network/user.html", {
+            "allPosts": all_posts,
+            "username": user.username,
+            "rightPage": rightPage,
+            "following": following,
+            "followers": followers,
+            "ifFollowed": ifFollowed,
+            "currentUser": user
+        })
